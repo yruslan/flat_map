@@ -52,10 +52,12 @@ int flat_test()
 	TEST(map1.count(12) == 1);
 
 	int nCount = 0;
-	for (flat_map<int, double>::iterator it = map1.begin(); it != map1.end(); it++)
 	{
-		//printf(" ( %d, %g )\n", it->first, it->second);
-		nCount++;
+		for (flat_map<int, double>::iterator it = map1.begin(); it != map1.end(); it++)
+		{
+			//printf(" ( %d, %g )\n", it->first, it->second);
+			nCount++;
+		}
 	}
 	TEST(nCount == 5);
 
@@ -105,10 +107,12 @@ int flat_test()
 	TEST(set1.size() == 6);
 
 	nCount = 0;
-	for (flat_set<int>::iterator it = set1.begin(); it != set1.end(); it++)
 	{
-		nCount++;
-		//printf(" ( %d )\n", *it);
+		for (flat_set<int>::iterator it = set1.begin(); it != set1.end(); it++)
+		{
+			nCount++;
+			//printf(" ( %d )\n", *it);
+		}
 	}
 	TEST(nCount == 6);
 
@@ -141,9 +145,11 @@ int flat_test()
 	TEST(set2.count(100) == 3);
 
 	nCount = 0;
-	for (flat_multiset<int>::iterator it = set2.begin(); it != set2.end(); it++)
 	{
-		nCount++;
+		for (flat_multiset<int>::iterator it = set2.begin(); it != set2.end(); it++)
+		{
+			nCount++;
+		}
 	}
 	TEST(nCount == 8);
 
@@ -178,7 +184,7 @@ int flat_test()
 
 int main (int argc, char **argv)
 {
-	fi = flat_test();
+	int fi = flat_test();
 	if (fi != 0)
 	{
 		printf("ftal_test() failed at test #%d\n", fi);
