@@ -84,10 +84,13 @@ public:
 
 	flat_map() : m_bSorted(true) {};
 #ifdef ENABLE_MOVE_SEMANTICS
+	flat_map(const flat_map& rhs) = default;
 	flat_map(flat_map&& rhs) NOEXCEPT{ swap(rhs); };
+	flat_map &operator=(const flat_map &rhs) = default;
 #endif
 
 	void clear();
+	void reserve(size_t size);
 	void insert(const pair_type &p);
 	void insert(const key_type &k, const val_type &v);
 	iterator find(const key_type &k);
@@ -105,7 +108,7 @@ public:
 	iterator begin();
 	iterator end();
 
-	void sort();
+	void sort(bool bPriorityFirstUnique = false);
 
 private:
 	template<class T>
@@ -152,10 +155,13 @@ public:
 
 	flat_multimap() : m_bSorted(true) {};
 #ifdef ENABLE_MOVE_SEMANTICS
+	flat_multimap(const flat_multimap& rhs) = default;
 	flat_multimap(flat_multimap&& rhs) NOEXCEPT{ swap(rhs); };
+	flat_multimap &operator=(const flat_multimap &rhs) = default;	
 #endif
 
 	void clear();
+	void reserve(size_t size);
 	void insert(const pair_type &p);
 	void insert(const key_type &k, const val_type &v);
 	iterator find(const key_type &k);
@@ -217,6 +223,12 @@ inline void flat_map<key_type, val_type>::clear()
 {
 	ar.clear();
 	m_bSorted = true;
+}
+
+template<typename key_type, typename val_type>
+inline void flat_map<key_type, val_type>::reserve(size_t size)
+{
+	ar.reserve(size);
 }
 
 template<typename key_type, typename val_type>
@@ -347,7 +359,7 @@ inline typename flat_map<key_type, val_type>::iterator flat_map<key_type, val_ty
 }
 
 template<typename key_type, typename val_type>
-void inline flat_map<key_type, val_type>::sort()
+void inline flat_map<key_type, val_type>::sort(bool bPriorityFirstUnique /*= false*/)
 {
 	if (ar.size() < 2)
 	{
@@ -359,20 +371,23 @@ void inline flat_map<key_type, val_type>::sort()
 	std::stable_sort(i0, i1, flat_map_less_key<pair_type>());
 
 	// reversing first and last unique values
-	int nLast = static_cast<int>(ar.size()) - 1;
-	int nFirstUnique = nLast;
-	int nLastUnique = nLast;
-	for (int i = nLast - 1; i >= 0; i--)
+	if (!bPriorityFirstUnique)
 	{
-		if (ar[i].first == ar[nLastUnique].first)
+		int nLast = static_cast<int>(ar.size()) - 1;
+		int nFirstUnique = nLast;
+		int nLastUnique = nLast;
+		for (int i = nLast - 1; i >= 0; i--)
 		{
-			nLastUnique--;
-			if (i == 0) std::swap(ar[nFirstUnique], ar[nLastUnique]);
-			continue;
+			if (ar[i].first == ar[nLastUnique].first)
+			{
+				nLastUnique--;
+				if (i == 0) std::swap(ar[nFirstUnique], ar[nLastUnique]);
+				continue;
+			}
+			if (nFirstUnique != nLastUnique) std::swap(ar[nFirstUnique], ar[nLastUnique]);
+			nFirstUnique = i;
+			nLastUnique = i;
 		}
-		if (nFirstUnique != nLastUnique) std::swap(ar[nFirstUnique], ar[nLastUnique]);
-		nFirstUnique = i;
-		nLastUnique = i;
 	}
 	ar.erase(std::unique(i0, i1, flat_map_equal_key<pair_type>()), i1);
 
@@ -386,6 +401,12 @@ inline void flat_multimap<key_type, val_type>::clear()
 {
 	ar.clear();
 	m_bSorted = true;
+}
+
+template<typename key_type, typename val_type>
+inline void flat_multimap<key_type, val_type>::reserve(size_t size)
+{
+	ar.reserve(size);
 }
 
 template<typename key_type, typename val_type>

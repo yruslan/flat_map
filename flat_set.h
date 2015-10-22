@@ -83,10 +83,13 @@ public:
 
 	flat_set() : m_bSorted(true) {};
 #ifdef ENABLE_MOVE_SEMANTICS
+	flat_set(const flat_set& rhs) = default;
 	flat_set(flat_set&& rhs) NOEXCEPT { swap(rhs); };
+	flat_set &operator=(const flat_set &rhs) = default;	
 #endif
 
 	void clear();
+	void reserve(size_t size);
 	void insert(const T &p);
 	iterator find(const T &k);
 	iterator lower_bound(const T &k);
@@ -103,7 +106,7 @@ public:
 	iterator begin();
 	iterator end();
 
-	void sort();
+	void sort(bool bPriorityFirstUnique = false);
 
 private:
 	std::vector<T> ar;
@@ -119,10 +122,13 @@ public:
 
 	flat_multiset() : m_bSorted(true) {};
 #ifdef ENABLE_MOVE_SEMANTICS
+	flat_multiset(const flat_multiset& rhs) = default;
 	flat_multiset(flat_multiset&& rhs) NOEXCEPT{ swap(rhs); };
+	flat_multiset &operator=(const flat_multiset &rhs) = default;	
 #endif
 
 	void clear();
+	void reserve(size_t size);
 	void insert(const T &p);
 	iterator find(const T &k);
 	iterator lower_bound(const T &k);
@@ -154,6 +160,12 @@ inline void flat_set<T>::clear()
 {
 	ar.clear();
 	m_bSorted = true;
+}
+
+template<typename T>
+inline void flat_set<T>::reserve(size_t size)
+{
+	ar.reserve(size);
 }
 
 template<typename T>
@@ -202,6 +214,7 @@ inline size_t flat_set<T>::count(const T &v)
 {
 	if (!m_bSorted) sort();
 	bool b = std::binary_search(ar.begin(), ar.end(), v);
+	//bool b = std::binary_search(&(*ar.begin()), &(*ar.begin())+ar.size(), v); // binary_search() on C arrays is faster then on vector
 	if (!b) return 0;
 	return 1;
 }
@@ -262,7 +275,7 @@ inline typename flat_set<T>::iterator flat_set<T>::end()
 }
 
 template<typename T>
-void inline flat_set<T>::sort()
+void inline flat_set<T>::sort(bool bPriorityFirstUnique /*= false*/)
 {
 	if (ar.size() < 2)
 	{
@@ -274,20 +287,23 @@ void inline flat_set<T>::sort()
 	std::stable_sort(i0, i1);
 
 	// reversing first and last unique values
-	int nLast = static_cast<int>(ar.size()) - 1;
-	int nFirstUnique = nLast;
-	int nLastUnique = nLast;
-	for (int i = nLast - 1; i >= 0; i--)
+	if (!bPriorityFirstUnique)
 	{
-		if (ar[i] == ar[nLastUnique])
+		int nLast = static_cast<int>(ar.size()) - 1;
+		int nFirstUnique = nLast;
+		int nLastUnique = nLast;
+		for (int i = nLast - 1; i >= 0; i--)
 		{
-			nLastUnique--;
-			if (i == 0) std::swap(ar[nFirstUnique], ar[nLastUnique]);
-			continue;
+			if (ar[i] == ar[nLastUnique])
+			{
+				nLastUnique--;
+				if (i == 0) std::swap(ar[nFirstUnique], ar[nLastUnique]);
+				continue;
+			}
+			if (nFirstUnique != nLastUnique) std::swap(ar[nFirstUnique], ar[nLastUnique]);
+			nFirstUnique = i;
+			nLastUnique = i;
 		}
-		if (nFirstUnique != nLastUnique) std::swap(ar[nFirstUnique], ar[nLastUnique]);
-		nFirstUnique = i;
-		nLastUnique = i;
 	}
 	ar.erase(std::unique(i0, i1), i1);
 
@@ -301,6 +317,12 @@ inline void flat_multiset<T>::clear()
 {
 	ar.clear();
 	m_bSorted = true;
+}
+
+template<typename T>
+inline void flat_multiset<T>::reserve(size_t size)
+{
+	ar.reserve(size);
 }
 
 template<typename T>
