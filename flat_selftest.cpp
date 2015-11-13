@@ -39,6 +39,10 @@ int flat_test()
 
 	flat_map<int, double> map1;
 
+	flat_map<int, double>::iterator it0 = map1.find(12);
+	TEST(it0 == map1.end());
+	TEST(map1.count(12)==0);
+
 	map1.insert(10, 1.);
 	map1.insert(10, -999.99);
 	map1.insert(11, 100.);
@@ -95,6 +99,9 @@ int flat_test()
 	TEST(nCount == 3);
 
 	flat_set<int> set1;
+	flat_set<int>::iterator it_s0 = set1.find(12);
+	TEST(it_s0 == set1.end());
+	TEST(set1.count(12)==0);
 
 	set1.insert(33);
 	set1.insert(22);
