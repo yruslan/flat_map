@@ -4,7 +4,7 @@
 #include <vector>
 #include <algorithm>
 
-/* 
+/*
  * Minimalistic map C++ template based on vector
  *
  * Flat map features
@@ -32,7 +32,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- * 
+ *
  * For more information, please refer to <http://opensource.org/licenses/MIT>
  */
 
@@ -74,6 +74,13 @@
 # define ENABLE_MOVE_SEMANTICS
 #endif // (_MSC_VER >= 1700)
 
+#define ENABLE_TEMPLATE_OVERLOADS
+#ifdef _MSC_VER
+#if (_MSC_VER < 1400)
+#undef ENABLE_TEMPLATE_OVERLOADS
+#endif // (_MSC_VER < 1400)
+#endif // _MSC_VER
+
 template<typename key_type, typename val_type>
 class flat_map
 {
@@ -94,6 +101,9 @@ public:
 	void insert(const pair_type &p);
 	void insert(const key_type &k, const val_type &v);
 	iterator find(const key_type &k);
+#ifdef ENABLE_TEMPLATE_OVERLOADS
+	template <typename U> iterator find(const U &k);
+#endif
 	iterator lower_bound(const key_type &k);
 	iterator upper_bound(const key_type &k);
 	iterator_pair equal_range(const key_type &k);
@@ -157,7 +167,7 @@ public:
 #ifdef ENABLE_MOVE_SEMANTICS
 	flat_multimap(const flat_multimap& rhs) = default;
 	flat_multimap(flat_multimap&& rhs) NOEXCEPT{ swap(rhs); };
-	flat_multimap &operator=(const flat_multimap &rhs) = default;	
+	flat_multimap &operator=(const flat_multimap &rhs) = default;
 #endif
 
 	void clear();
@@ -258,6 +268,31 @@ inline typename flat_map<key_type, val_type>::iterator flat_map<key_type, val_ty
 	return pit.first;
 }
 
+#ifdef ENABLE_TEMPLATE_OVERLOADS
+template<typename key_type, typename val_type>
+template<typename U>
+inline typename flat_map<key_type, val_type>::iterator flat_map<key_type, val_type>::find(const U &k)
+{
+	if (ar.size() == 0) return ar.end();
+	if (!m_bSorted) sort();
+
+	int lk = 0;
+	int rk = ar.size() - 1;
+	while (true)
+	{
+		int i = (lk + rk) / 2;
+		if (ar[i].first < k)
+			lk = i + 1;
+		else
+			if (ar[i].first == k)
+				return ar.begin() + i;
+			else
+				rk = i - 1;
+		if (lk>rk) return ar.end();
+	}
+}
+#endif
+
 template<typename key_type, typename val_type>
 inline typename flat_map<key_type, val_type>::iterator flat_map<key_type, val_type>::lower_bound(const key_type &k)
 {
@@ -294,6 +329,7 @@ inline typename flat_map<key_type, val_type>::iterator_pair flat_map<key_type, v
 template<typename key_type, typename val_type>
 inline size_t flat_map<key_type, val_type>::count(const key_type &k)
 {
+	if (!m_bSorted) sort();
 	pair_type p;
 	p.first = k;
 	bool b = std::binary_search(ar.begin(), ar.end(), p,
@@ -430,7 +466,7 @@ inline typename flat_multimap<key_type, val_type>::iterator flat_multimap<key_ty
 	pair_type p;
 	p.first = k;
 	iterator_pair pit = std::equal_range(ar.begin(), ar.end(), p,
-		flat_multimap<pair_type>());
+		flat_multimap_less_key<pair_type>());
 	if (pit.first == pit.second)
 		return ar.end();
 	return pit.first;
@@ -554,5 +590,9 @@ void inline flat_multimap<key_type, val_type>::sort()
 #undef ENABLE_MOVE_SEMANTICS
 #endif
 #undef NOEXCEPT
+
+#ifdef ENABLE_TEMPLATE_OVERLOADS
+#undef ENABLE_TEMPLATE_OVERLOADS
+#endif
 
 #endif // _FLAT_MAP_H_INCLUDED_2015_01_17
